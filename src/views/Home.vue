@@ -80,12 +80,11 @@
                 class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
               >
                 <tr>
-                  <th scope="col" class="px-6 py-3">案號</th>
+                  <th scope="col" class="px-6 py-3">案號/地址</th>
                   <th scope="col" class="px-6 py-3">所屬公司</th>
                   <th scope="col" class="px-6 py-3">債務人</th>
                   <th scope="col" class="px-6 py-3">債權人</th>
                   <th scope="col" class="px-6 py-3">狀態</th>
-                  <th scope="col" class="px-6 py-3">建立時間</th>
                   <th scope="col" class="px-6 py-3">
                     <span class="sr-only">編輯</span>
                   </th>
@@ -99,23 +98,31 @@
                 >
                   <th
                     scope="row"
-                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                    class="px-6 py-4 font-medium text-gray-900 dark:text-white"
                   >
-                    {{ item.number }}
+                    <div>
+                      <router-link
+                        :to="{ name: 'CaseDetail', params: { id: item.id } }"
+                        class="text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        {{ item.number }}
+                      </router-link>
+                    </div>
+                    <div class="text-sm text-gray-500 mt-1">
+                      {{ item.address }}
+                    </div>
                   </th>
                   <td class="px-6 py-4">{{ item.company }}</td>
                   <td class="px-6 py-4">{{ item.debtor }}</td>
                   <td class="px-6 py-4">{{ item.creditor }}</td>
                   <td class="px-6 py-4">{{ item.status }}</td>
-                  <td class="px-6 py-4">
-                    {{ new Date(item.created_at).toLocaleString() }}
-                  </td>
                   <td class="px-6 py-4 text-right">
-                    <a
-                      href="#"
+                    <router-link
+                      :to="{ name: 'CaseDetail', params: { id: item.id } }"
                       class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                      >編輯</a
                     >
+                      編輯
+                    </router-link>
                   </td>
                 </tr>
               </tbody>
@@ -134,9 +141,11 @@
 import { ref, onMounted } from 'vue';
 import { supabase } from '../supabase';
 import AddCaseModal from '../components/AddCaseModal.vue';
+import { useRouter } from 'vue-router';
 
 const showModal = ref(false);
 const caseList = ref([]);
+const router = useRouter();
 
 // 處理新案件創建
 const handleCaseCreated = (newCase) => {
@@ -152,7 +161,7 @@ const fetchCases = async () => {
     const { data, error } = await supabase
       .from('cases')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('id', { ascending: false });
 
     if (error) throw error;
     caseList.value = data;

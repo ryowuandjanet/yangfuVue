@@ -1,16 +1,19 @@
 <template>
-  <div
-    v-if="show"
-    class="fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden overflow-y-auto outline-none focus:outline-none bg-gray-900 bg-opacity-50"
-  >
-    <div class="relative w-full max-w-xl max-h-full">
+  <div v-if="show" class="fixed inset-0 z-50 overflow-y-auto">
+    <!-- Modal 背景 -->
+    <div
+      class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+      @click="closeModal"
+    ></div>
+
+    <div class="relative p-4 w-full max-w-2xl max-h-full mx-auto">
       <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
         <!-- Modal header -->
         <div
           class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600"
         >
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-            新增案號
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+            {{ editMode ? '修改案號內容' : '新增案號' }}
           </h3>
           <button
             @click="closeModal"
@@ -19,6 +22,7 @@
           >
             <svg
               class="w-3 h-3"
+              aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 14 14"
@@ -31,7 +35,6 @@
                 d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
               />
             </svg>
-            <span class="sr-only">關閉</span>
           </button>
         </div>
 
@@ -400,19 +403,45 @@
           </div>
 
           <!-- 按鈕區 -->
-          <div class="flex items-center space-x-4">
+          <div
+            class="flex items-center p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600"
+          >
             <button
               type="submit"
-              class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
               :disabled="isLoading"
+              class="text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
             >
-              {{ isLoading ? '處理中...' : '新增案號' }}
+              <span v-if="isLoading">
+                <svg
+                  class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                處理中...
+              </span>
+              <span v-else>
+                {{ editMode ? '修改' : '新增' }}
+              </span>
             </button>
             <button
-              type="button"
               @click="closeModal"
-              class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
-              :disabled="isLoading"
+              type="button"
+              class="ms-3 text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
             >
               取消
             </button>
@@ -424,7 +453,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { supabase } from '../supabase';
 import { taiwanDistricts } from '../utils/taiwanDistricts';
 import { COMPANIES } from '../utils/constants';
@@ -432,9 +461,19 @@ import { COMPANIES } from '../utils/constants';
 const emit = defineEmits(['update:show', 'submit']);
 const props = defineProps({
   show: Boolean,
+  editMode: {
+    type: Boolean,
+    default: false,
+  },
+  initialData: {
+    type: Object,
+    default: () => null,
+  },
 });
 
-// 表單資料
+const isLoading = ref(false);
+
+// 表單資料初始化
 const formData = ref({
   number: '',
   company: '',
@@ -454,9 +493,48 @@ const formData = ref({
   creditors: [{ name: '' }],
 });
 
+// 當有初始資料時，填充表單
+watch(
+  () => props.initialData,
+  (newData) => {
+    if (newData) {
+      formData.value = {
+        number: newData.number || '',
+        company: newData.company || '',
+        city: newData.city || '',
+        district: newData.district || '',
+        section: newData.section || '',
+        subSection: newData.sub_section || '',
+        village: newData.village || '',
+        neighborhood: newData.neighborhood || '',
+        street: newData.street || '',
+        streetSection: newData.street_section || '',
+        lane: newData.lane || '',
+        alley: newData.alley || '',
+        houseNumber: newData.house_number || '',
+        floor: newData.floor || '',
+        debtors: newData.debtor
+          ? newData.debtor.split('、').map((name) => ({ name: name.trim() }))
+          : [{ name: '' }],
+        creditors: newData.creditor
+          ? newData.creditor.split('、').map((name) => ({ name: name.trim() }))
+          : [{ name: '' }],
+      };
+    }
+  },
+  { immediate: true },
+);
+
+// 計算當前選擇縣市的鄉鎮市區列表
+const districts = computed(() => {
+  return formData.value.city ? taiwanDistricts[formData.value.city] : [];
+});
+
 // 處理表單提交
 const handleSubmit = async () => {
   try {
+    isLoading.value = true;
+
     // 組合債務人和債權人名稱
     const debtorNames = formData.value.debtors
       .map((d) => d.name)
@@ -483,59 +561,77 @@ const handleSubmit = async () => {
       .filter(Boolean)
       .join('');
 
-    const { data, error } = await supabase
-      .from('cases')
-      .insert([
-        {
-          number: formData.value.number,
-          company: formData.value.company,
-          debtor: debtorNames.join('、'),
-          creditor: creditorNames.join('、'),
-          address: fullAddress,
-          city: formData.value.city,
-          district: formData.value.district,
-          section: formData.value.section,
-          sub_section: formData.value.subSection,
-          village: formData.value.village,
-          neighborhood: formData.value.neighborhood,
-          street: formData.value.street,
-          street_section: formData.value.streetSection,
-          lane: formData.value.lane,
-          alley: formData.value.alley,
-          house_number: formData.value.houseNumber,
-          floor: formData.value.floor,
-          status: '進行中',
-        },
-      ])
-      .select();
+    const caseData = {
+      number: formData.value.number,
+      company: formData.value.company,
+      debtor: debtorNames.join('、'),
+      creditor: creditorNames.join('、'),
+      address: fullAddress,
+      city: formData.value.city,
+      district: formData.value.district,
+      section: formData.value.section,
+      sub_section: formData.value.subSection,
+      village: formData.value.village,
+      neighborhood: formData.value.neighborhood,
+      street: formData.value.street,
+      street_section: formData.value.streetSection,
+      lane: formData.value.lane,
+      alley: formData.value.alley,
+      house_number: formData.value.houseNumber,
+      floor: formData.value.floor,
+      status: '進行中',
+    };
 
-    if (error) throw error;
+    if (props.editMode) {
+      // 編輯模式：更新現有記錄
+      const { data, error } = await supabase
+        .from('cases')
+        .update(caseData)
+        .eq('id', props.initialData.id)
+        .select();
 
-    // 發出成功事件
-    emit('submit', data[0]);
+      if (error) throw error;
+      emit('submit', data[0]);
+    } else {
+      // 新增模式：插入新記錄
+      const { data, error } = await supabase
+        .from('cases')
+        .insert([caseData])
+        .select();
+
+      if (error) throw error;
+      emit('submit', data[0]);
+    }
+
+    // 關閉 Modal
     emit('update:show', false);
 
-    // 重置表單
-    formData.value = {
-      number: '',
-      company: '',
-      city: '',
-      district: '',
-      section: '',
-      subSection: '',
-      village: '',
-      neighborhood: '',
-      street: '',
-      streetSection: '',
-      lane: '',
-      alley: '',
-      houseNumber: '',
-      floor: '',
-      debtors: [{ name: '' }],
-      creditors: [{ name: '' }],
-    };
+    // 只在新增模式下重置表單
+    if (!props.editMode) {
+      formData.value = {
+        number: '',
+        company: '',
+        city: '',
+        district: '',
+        section: '',
+        subSection: '',
+        village: '',
+        neighborhood: '',
+        street: '',
+        streetSection: '',
+        lane: '',
+        alley: '',
+        houseNumber: '',
+        floor: '',
+        debtors: [{ name: '' }],
+        creditors: [{ name: '' }],
+      };
+    }
   } catch (error) {
-    console.error('Error creating case:', error);
+    console.error('Error submitting case:', error);
+    alert(props.editMode ? '更新失敗' : '新增失敗');
+  } finally {
+    isLoading.value = false;
   }
 };
 
@@ -563,8 +659,35 @@ const removeCreditor = (index) => {
   }
 };
 
-// 計算當前選擇縣市的鄉鎮市區列表
-const districts = computed(() => {
-  return formData.value.city ? taiwanDistricts[formData.value.city] : [];
+// 關閉 Modal 的方法
+const closeModal = () => {
+  emit('update:show', false);
+  // 如果不是編輯模式，重置表單
+  if (!props.editMode) {
+    formData.value = {
+      number: '',
+      company: '',
+      city: '',
+      district: '',
+      section: '',
+      subSection: '',
+      village: '',
+      neighborhood: '',
+      street: '',
+      streetSection: '',
+      lane: '',
+      alley: '',
+      houseNumber: '',
+      floor: '',
+      debtors: [{ name: '' }],
+      creditors: [{ name: '' }],
+    };
+  }
+};
+
+// 可以添加一個計算屬性來控制按鈕文字
+const submitButtonText = computed(() => {
+  if (isLoading.value) return '處理中...';
+  return props.editMode ? '修改' : '新增';
 });
 </script>

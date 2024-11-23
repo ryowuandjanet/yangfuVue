@@ -5,6 +5,7 @@ import Register from '../views/Register.vue';
 import Profile from '../views/Profile.vue';
 import ForgotPassword from '../views/ForgotPassword.vue';
 import ResetPassword from '../views/ResetPassword.vue';
+import CaseDetail from '../views/CaseDetail.vue';
 
 const routes = [
   {
@@ -37,6 +38,12 @@ const routes = [
     path: '/reset-password',
     name: 'ResetPassword',
     component: ResetPassword,
+  },
+  {
+    path: '/cases/:id',
+    name: 'CaseDetail',
+    component: CaseDetail,
+    meta: { requiresAuth: true },
   },
 ];
 
