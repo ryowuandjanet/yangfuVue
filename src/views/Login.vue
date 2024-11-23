@@ -8,7 +8,6 @@ const authStore = useAuthStore();
 
 const email = ref('');
 const password = ref('');
-const rememberMe = ref(false);
 const formError = ref('');
 
 const handleSubmit = async () => {
@@ -22,11 +21,14 @@ const handleSubmit = async () => {
   const { error } = await authStore.login(email.value, password.value);
 
   if (error) {
-    formError.value = error;
+    if (error === 'Invalid login credentials') {
+      formError.value = '登入憑證無效';
+    } else {
+      formError.value = error;
+    }
     return;
   }
 
-  // 登入成功，跳轉到首頁
   router.push('/');
 };
 </script>

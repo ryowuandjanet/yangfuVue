@@ -1,6 +1,21 @@
 import { defineStore } from 'pinia';
 import { supabase } from '../supabase';
 
+// 錯誤訊息對照表
+const errorMessages = {
+  'Invalid login credentials': '登入憑證無效',
+  'Email not confirmed': '電子郵件尚未驗證',
+  'Invalid email': '無效的電子郵件格式',
+  'User already registered': '該電子郵件已被註冊',
+  'Password should be at least 6 characters': '密碼長度至少為6個字符',
+  // 可以添加更多錯誤訊息對照
+};
+
+// 轉換錯誤訊息的輔助函數
+const translateError = (error) => {
+  return errorMessages[error] || error;
+};
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
@@ -51,8 +66,9 @@ export const useAuthStore = defineStore('auth', {
         this.user = data.user;
         return { data, error: null };
       } catch (error) {
-        this.error = error.message;
-        return { data: null, error: error.message };
+        const translatedError = translateError(error.message);
+        this.error = translatedError;
+        return { data: null, error: translatedError };
       } finally {
         this.loading = false;
       }
@@ -72,8 +88,9 @@ export const useAuthStore = defineStore('auth', {
 
         return { data, error: null };
       } catch (error) {
-        this.error = error.message;
-        return { data: null, error: error.message };
+        const translatedError = translateError(error.message);
+        this.error = translatedError;
+        return { data: null, error: translatedError };
       } finally {
         this.loading = false;
       }
@@ -90,6 +107,47 @@ export const useAuthStore = defineStore('auth', {
         this.user = null;
       } catch (error) {
         this.error = error.message;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async resetPassword(email) {
+      try {
+        this.loading = true;
+        this.error = null;
+
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+
+        if (error) throw error;
+
+        return { error: null };
+      } catch (error) {
+        const translatedError = translateError(error.message);
+        this.error = translatedError;
+        return { error: translatedError };
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async updatePassword(newPassword) {
+      try {
+        this.loading = true;
+        this.error = null;
+
+        const { error } = await supabase.auth.updateUser({
+          password: newPassword,
+        });
+
+        if (error) throw error;
+
+        return { error: null };
+      } catch (error) {
+        this.error = error.message;
+        return { error: error.message };
       } finally {
         this.loading = false;
       }
