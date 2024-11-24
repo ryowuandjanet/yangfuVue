@@ -33,6 +33,9 @@
 
       <!-- 土地資料組件 -->
       <Land v-if="caseData" :case-id="route.params.id" />
+
+      <!-- 建物資料組件 -->
+      <Build v-if="caseData" :case-id="route.params.id" />
     </div>
   </div>
 </template>
@@ -43,6 +46,7 @@ import { useRoute } from 'vue-router';
 import { supabase } from '../supabase';
 import BaseData from './subCaseTemplates/BaseData.vue';
 import Land from './subCaseTemplates/Land.vue';
+import Build from './subCaseTemplates/Build.vue';
 
 const route = useRoute();
 const caseData = ref(null);
