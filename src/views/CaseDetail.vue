@@ -42,6 +42,9 @@
 
       <!-- 勘查報告 -->
       <Survey v-if="caseData" :case-id="route.params.id" />
+
+      <!-- 組件 -->
+      <ObjectBuilds v-if="caseData" :case-id="route.params.id" />
     </div>
   </div>
 </template>
@@ -55,6 +58,7 @@ import Land from './subCaseTemplates/Land.vue';
 import Build from './subCaseTemplates/Build.vue';
 import Auction from './subCaseTemplates/Auction.vue';
 import Survey from './subCaseTemplates/Survey.vue';
+import ObjectBuilds from './subCaseTemplates/ObjectBuilds.vue';
 
 const route = useRoute();
 const caseData = ref(null);
