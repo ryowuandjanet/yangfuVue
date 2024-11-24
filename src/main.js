@@ -5,6 +5,9 @@ import './style.css';
 import App from './App.vue';
 import { useAuthStore } from './stores/auth';
 
+// 引入 Flowbite CSS
+import 'flowbite/dist/flowbite.css';
+
 const app = createApp(App);
 const pinia = createPinia();
 

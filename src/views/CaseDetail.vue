@@ -36,6 +36,9 @@
 
       <!-- 建物資料組件 -->
       <Build v-if="caseData" :case-id="route.params.id" />
+
+      <!-- 拍賣資料組件 -->
+      <Auction v-if="caseData" :case-id="route.params.id" />
     </div>
   </div>
 </template>
@@ -47,6 +50,7 @@ import { supabase } from '../supabase';
 import BaseData from './subCaseTemplates/BaseData.vue';
 import Land from './subCaseTemplates/Land.vue';
 import Build from './subCaseTemplates/Build.vue';
+import Auction from './subCaseTemplates/Auction.vue';
 
 const route = useRoute();
 const caseData = ref(null);
