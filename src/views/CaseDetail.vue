@@ -39,6 +39,9 @@
 
       <!-- 拍賣資料組件 -->
       <Auction v-if="caseData" :case-id="route.params.id" />
+
+      <!-- 勘查報告 -->
+      <Survey v-if="caseData" :case-id="route.params.id" />
     </div>
   </div>
 </template>
@@ -51,6 +54,7 @@ import BaseData from './subCaseTemplates/BaseData.vue';
 import Land from './subCaseTemplates/Land.vue';
 import Build from './subCaseTemplates/Build.vue';
 import Auction from './subCaseTemplates/Auction.vue';
+import Survey from './subCaseTemplates/Survey.vue';
 
 const route = useRoute();
 const caseData = ref(null);
